@@ -1,20 +1,23 @@
 lifx = require 'lifx'
 express = require 'express'
 
-app = express()
-
 lx = lifx.init()
 
 DEFAULT_LENGTH = 20 * 60 * 1000
 
 class Sunrise
   scheduleSunrise: (delta) ->
-    if @next
-      clearTimeout @nextId
-    @next = delta + new Date()
+    @deleteSunriseIfExists()
+    @next = new Date delta + (+new Date())
+    console.log delta, new Date(), @next
     @nextId = setTimeout () =>
       @sunrise DEFAULT_LENGTH
     , delta
+
+  deleteSunriseIfExists: () ->
+    if @next
+      clearTimeout @nextId
+      @next = null
 
   sunrise: (length) ->
     bulbLength = 0xfeee
@@ -32,9 +35,27 @@ class Sunrise
     , bulbLength
 
 sun = new Sunrise()
-sun.scheduleSunrise 0
 
 lx.on 'packet', (p) ->
   if p.packetTypeShortName == 'lightStatus'
     console.log 'lightStatus', p
 
+configure = (app) ->
+  app.get '/sunrise', (req, res, next) ->
+    res.render 'sunrise', sun: sun
+
+  app.post '/sunrise', (req, res, next) ->
+    delta = parseInt req.body.delta, 10
+    sun.scheduleSunrise delta
+    res.redirect '/sunrise'
+
+  app.post '/sunrise/delete', (req, res, next) ->
+    sun.deleteSunriseIfExists()
+    res.redirect '/sunrise'
+
+app = express()
+app.set 'views', __dirname + '/views'
+app.set 'view engine', 'jade'
+app.use express.bodyParser()
+configure app
+app.listen 2173

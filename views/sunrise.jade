@@ -1,0 +1,10 @@
+html
+  head
+    meta(name="viewport", content="width=device-width, user-scalable=no")
+  body
+    =sun.next
+    form(method="POST")
+      input(type="hidden", name="delta", value=8 * 60 * 60 * 1000)
+      input(type="submit", value="8 hours")
+    form(method="POST", action="/sunrise/delete")
+      input(type="submit", value="delete sunrise")
