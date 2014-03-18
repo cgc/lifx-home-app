@@ -1,15 +1,34 @@
 html
   head
     meta(name="viewport", content="width=device-width, user-scalable=no")
+    link(rel="stylesheet", href="/css/colpick.css")
   body
-    =sun.next
-    form(method="POST")
-      input(type="hidden", name="delta", value=8 * 60 * 60 * 1000)
-      input(type="submit", value="8 hours")
-    form(method="POST")
-      input(type="hidden", name="delta", value=0)
-      input(type="submit", value="sunrise now")
-    form(method="POST", action="/sunrise/delete")
-      input(type="submit", value="delete sunrise")
-    form(method="POST", action="/mega-dim")
-      input(type="submit", value="mega dim")
+    .container
+      =sun.next
+      form(method="POST")
+        input(type="hidden", name="delta", value=8 * 60 * 60 * 1000)
+        input(type="submit", value="8 hours")
+      form(method="POST")
+        input(type="hidden", name="delta", value=0)
+        input(type="submit", value="sunrise now")
+      form(method="POST", action="/sunrise/delete")
+        input(type="submit", value="delete sunrise")
+      form(method="POST", action="/mega-dim")
+        input(type="submit", value="mega dim")
+      div#picker
+
+    script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
+    script(src="/js/colpick.js")
+    script(src="/js/socket.io.min.js")
+    script.
+      var socket = io.connect("http://" + window.location.hostname + ":2174");
+      $(document).ready(function() {
+        $('#picker').colpick({
+          flat: true,
+          layout: 'full',
+          submit: 0,
+          onChange: function(hsb, hex, rgb) {
+            socket.emit('color:change', {hsb: hsb, hex: hex, rgb: rgb});
+          }
+        });
+      });

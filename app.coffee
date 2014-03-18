@@ -1,5 +1,7 @@
 lifx = require 'lifx'
 express = require 'express'
+socketio = require 'socket.io'
+_ = require 'underscore'
 
 lx = lifx.init()
 
@@ -65,8 +67,19 @@ configure = (app) ->
     res.redirect '/sunrise'
 
 app = express()
+
+change = (data) ->
+  conv = (n, ur) -> Math.min(0xffff, Math.floor((0xffff / ur) * n))
+  lx.lightsColour(conv(data.hsb.h, 360), conv(data.hsb.s, 100), conv(data.hsb.b, 100), 0x0dac, 50)
+change = _.throttle change, 80
+
+io = socketio.listen 2174
+io.sockets.on 'connection', (socket) ->
+  socket.on 'color:change', change
+
 app.set 'views', __dirname + '/views'
 app.set 'view engine', 'jade'
+app.use express.static __dirname + '/assets'
 app.use express.bodyParser()
 configure app
 app.listen 2173
