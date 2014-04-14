@@ -2,8 +2,12 @@ lifx = require 'lifx'
 express = require 'express'
 socketio = require 'socket.io'
 _ = require 'underscore'
+dropbox = require './dropbox'
+passport = require 'passport'
 
 lx = lifx.init()
+SQLiteStore = require('connect-sqlite3')(express)
+
 
 DEFAULT_LENGTH = 20 * 60 * 1000
 
@@ -66,6 +70,9 @@ configure = (app) ->
     bulbSet Math.floor(0xffff / 125), 1000
     res.redirect '/sunrise'
 
+  app.get '/', (req, res, next) ->
+    res.render 'index', user: req.user
+
 app = express()
 
 change = (data) ->
@@ -81,5 +88,13 @@ app.set 'views', __dirname + '/views'
 app.set 'view engine', 'jade'
 app.use express.static __dirname + '/assets'
 app.use express.bodyParser()
+app.use express.cookieParser()
+app.use express.session
+  store: new SQLiteStore,
+  secret: 'your secret',
+  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } # 1 week
+app.use passport.initialize()
+app.use passport.session()
+dropbox.configure app
 configure app
 app.listen 2173

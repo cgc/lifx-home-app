@@ -1,0 +1,7 @@
+extends _layout
+
+block content
+  -if (typeof user === 'undefined')
+    a(href="/auth/dropbox") Log in
+  -else
+    =user.profile.displayName
